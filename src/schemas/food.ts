@@ -43,6 +43,7 @@ export const foodTransactionSchema = z
 export const foodItemsQuerySchema = z.object({
   sessionHash: z.string().min(1, 'Session hash is required'),
   id: z.array(z.string()).or(z.string()).optional(),
+  'id[]': z.array(z.string()).or(z.string()).optional(),
 });
 
 export const foodItemQuantityQuerySchema = z.object({
