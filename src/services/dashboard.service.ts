@@ -180,7 +180,7 @@ export const dashboardService = {
    * Get expenses grouped by category
    */
   async getExpensesByCategory(nMonths?: number): Promise<CategoryExpenseResponse> {
-    const months = nMonths || 13;
+    const months = nMonths ?? 13;
 
     const fechaInicio = DateTime.now()
       .minus({ months })
@@ -284,7 +284,7 @@ export const dashboardService = {
    * Get yearly sum by document type
    */
   async getYearlySum(nMonths?: number): Promise<YearlySumResponse> {
-    const months = nMonths || 12;
+    const months = nMonths ?? 12;
 
     const fechaInicio =
       DateTime.now().minus({ months }).toFormat('yyyy-MM-') + '01';
@@ -327,7 +327,7 @@ export const dashboardService = {
   async getExpensesByCategoryTimeseries(
     nMonths?: string
   ): Promise<CategoryTimeseriesResponse> {
-    const months = Number.parseInt(nMonths || '13', 10);
+    const months = nMonths !== undefined ? Number.parseInt(nMonths, 10) : 13;
 
     const fechaInicio = DateTime.now()
       .minus({ months })
