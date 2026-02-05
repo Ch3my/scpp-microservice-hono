@@ -20,7 +20,8 @@ export const assetsService = {
    * Get assets with optional ID filter
    */
   async getAssets(params: AssetsQuery): Promise<Asset[]> {
-    const { id } = params;
+    // Handle both 'id' and 'id[]' query parameter formats
+    const idParam = params.id || params['id[]'];
 
     let query = `
       SELECT assets.id, assets.fk_categoria,
@@ -31,8 +32,8 @@ export const assetsService = {
       WHERE 1 = 1
     `;
 
-    if (id) {
-      const ids = Array.isArray(id) ? id.join(',') : id;
+    if (idParam) {
+      const ids = Array.isArray(idParam) ? idParam.join(',') : idParam;
       query += ` AND assets.id IN (${ids})`;
     }
 

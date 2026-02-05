@@ -187,14 +187,16 @@ const deleteFoodTransactionRoute = createRoute({
 // ============== FOOD ITEMS Handlers ==============
 
 foodRouter.openapi(getFoodItemsRoute, async (c) => {
-  const { sessionHash, id } = c.req.valid('query');
+  const query = c.req.valid('query');
 
-  const isValid = await sessionService.validate(sessionHash);
+  const isValid = await sessionService.validate(query.sessionHash);
   if (!isValid) {
     throw new InvalidSessionError();
   }
 
-  const items = await foodService.getFoodItems(id);
+  // Handle both 'id' and 'id[]' query parameter formats
+  const idParam = query.id || query['id[]'];
+  const items = await foodService.getFoodItems(idParam);
   return c.json(items);
 });
 
