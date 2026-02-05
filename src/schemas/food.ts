@@ -20,6 +20,7 @@ export const foodItemQuantitySchema = z
     name: z.string(),
     unit: z.string(),
     quantity: z.number(),
+    last_transaction_at: z.string().nullable(),
   })
   .openapi('FoodItemQuantity');
 
@@ -29,13 +30,17 @@ export const foodItemQuantitySchema = z
 export const foodTransactionSchema = z
   .object({
     id: z.number(),
-    fk_food_item: z.number(),
-    quantity: z.number(),
-    transaction_type: z.enum(['in', 'out']),
+    item_id: z.number(),
+    item_name: z.string().optional(),
+    item_unit: z.string().optional(),
+    change_qty: z.number(),
+    transaction_type: z.enum(['restock', 'consumption', 'adjustment']),
+    occurred_at: z.string(),
     note: z.string().nullable(),
     code: z.string().nullable(),
     best_before: z.string().nullable(),
-    fecha: z.string(),
+    fk_transaction: z.number().nullable(),
+    remaining_quantity: z.number().nullable(),
   })
   .openapi('FoodTransaction');
 
@@ -84,7 +89,7 @@ export const createFoodTransactionSchema = z
   .object({
     foodItemId: z.number(),
     quantity: z.number(),
-    transactionType: z.enum(['in', 'out']),
+    transactionType: z.enum(['restock', 'consumption', 'adjustment']),
     note: z.string().optional(),
     code: z.string().optional(),
     bestBefore: z.string().nullable().optional(),

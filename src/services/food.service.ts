@@ -39,15 +39,10 @@ export const foodService = {
         fi.id,
         fi.name,
         fi.unit,
-        COALESCE(SUM(
-          CASE
-            WHEN ft.transaction_type = 'in' THEN ft.quantity
-            WHEN ft.transaction_type = 'out' THEN -ft.quantity
-            ELSE 0
-          END
-        ), 0) as quantity
+        COALESCE(SUM(ft.change_qty), 0) AS quantity,
+        MAX(ft.occurred_at) AS last_transaction_at
       FROM food_items fi
-      LEFT JOIN food_transactions ft ON fi.id = ft.fk_food_item
+      LEFT JOIN food_transactions ft ON fi.id = ft.item_id
       GROUP BY fi.id, fi.name, fi.unit
       ORDER BY fi.name
     `;
@@ -114,13 +109,43 @@ export const foodService = {
    * Get food transactions with optional food item filter
    */
   async getFoodTransactions(foodItemId?: string): Promise<FoodTransaction[]> {
-    let query = 'SELECT * FROM food_transactions WHERE 1 = 1';
+    let query = `
+      SELECT
+        ft.id,
+        ft.item_id,
+        fi.name AS item_name,
+        fi.unit AS item_unit,
+        ft.change_qty,
+        ft.transaction_type,
+        ft.occurred_at,
+        ft.note,
+        ft.code,
+        ft.best_before,
+        ft.fk_transaction,
+        CASE
+          WHEN ft.transaction_type = 'restock' THEN
+            ft.change_qty + COALESCE(SUM(m.change_qty), 0)
+          ELSE
+            NULL
+        END AS remaining_quantity
+      FROM food_transactions ft
+      JOIN food_items fi ON ft.item_id = fi.id
+      LEFT JOIN food_transactions m ON ft.id = m.fk_transaction
+        AND m.transaction_type IN ('consumption', 'adjustment')
+      WHERE 1 = 1
+    `;
 
     if (foodItemId) {
-      query += ` AND fk_food_item = ${foodItemId}`;
+      query += ` AND ft.item_id = ${foodItemId}`;
     }
 
-    query += ' ORDER BY fecha DESC';
+    query += `
+      GROUP BY
+        ft.id, ft.item_id, fi.name, fi.unit, ft.change_qty,
+        ft.transaction_type, ft.occurred_at, ft.note, ft.code,
+        ft.best_before, ft.fk_transaction
+      ORDER BY ft.occurred_at DESC
+    `;
 
     return select<FoodTransaction>(query);
   },
@@ -171,7 +196,7 @@ export const foodService = {
     const params: unknown[] = [];
 
     if (data.quantity !== undefined) {
-      updates.push('quantity = ?');
+      updates.push('change_qty = ?');
       params.push(data.quantity);
     }
     if (data.note !== undefined) {
