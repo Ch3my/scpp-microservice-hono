@@ -1,6 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { documentosService } from '../services/documentos.service';
 import { sessionService } from '../services/session.service';
+import { requireSessionQuery } from '../middleware/auth';
 import {
   documentoSchema,
   documentosQuerySchema,
@@ -13,6 +14,9 @@ import { InvalidSessionError } from '../errors/http';
 import type { AppEnv } from '../types/context';
 
 export const documentosRouter = new OpenAPIHono<AppEnv>();
+
+// Apply session validation middleware to GET routes
+documentosRouter.use('/documentos', requireSessionQuery);
 
 // ============== Route Definitions ==============
 
@@ -92,12 +96,6 @@ const deleteDocumentoRoute = createRoute({
 
 documentosRouter.openapi(getDocumentosRoute, async (c) => {
   const query = c.req.valid('query');
-
-  const isValid = await sessionService.validate(query.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const docs = await documentosService.getDocumentos(query);
   return c.json(docs);
 });

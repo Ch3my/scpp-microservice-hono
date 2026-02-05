@@ -1,6 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { foodService } from '../services/food.service';
 import { sessionService } from '../services/session.service';
+import { requireSessionQuery } from '../middleware/auth';
 import {
   foodItemSchema,
   foodItemQuantitySchema,
@@ -20,6 +21,11 @@ import { InvalidSessionError, MissingDataError } from '../errors/http';
 import type { AppEnv } from '../types/context';
 
 export const foodRouter = new OpenAPIHono<AppEnv>();
+
+// Apply session validation middleware to GET routes
+foodRouter.use('/items', requireSessionQuery);
+foodRouter.use('/item-quantity', requireSessionQuery);
+foodRouter.use('/transaction', requireSessionQuery);
 
 // ============== FOOD ITEMS Route Definitions ==============
 
@@ -188,12 +194,6 @@ const deleteFoodTransactionRoute = createRoute({
 
 foodRouter.openapi(getFoodItemsRoute, async (c) => {
   const query = c.req.valid('query');
-
-  const isValid = await sessionService.validate(query.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   // Handle both 'id' and 'id[]' query parameter formats
   const idParam = query.id || query['id[]'];
   const items = await foodService.getFoodItems(idParam);
@@ -201,13 +201,6 @@ foodRouter.openapi(getFoodItemsRoute, async (c) => {
 });
 
 foodRouter.openapi(getFoodItemQuantityRoute, async (c) => {
-  const { sessionHash } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const items = await foodService.getFoodItemsQuantity();
   return c.json(items);
 });
@@ -253,13 +246,7 @@ foodRouter.openapi(deleteFoodItemRoute, async (c) => {
 // ============== FOOD TRANSACTIONS Handlers ==============
 
 foodRouter.openapi(getFoodTransactionsRoute, async (c) => {
-  const { sessionHash, foodItemId } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
+  const { foodItemId } = c.req.valid('query');
   const transactions = await foodService.getFoodTransactions(foodItemId);
   return c.json(transactions);
 });

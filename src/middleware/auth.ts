@@ -23,30 +23,3 @@ export const requireSessionQuery = createMiddleware<AppEnv>(async (c, next) => {
   await next();
 });
 
-/**
- * Middleware to validate session hash from request body
- * Use for POST/PUT/DELETE requests where sessionHash comes from body
- */
-export const requireSessionBody = createMiddleware<AppEnv>(async (c, next) => {
-  let body: { sessionHash?: string };
-
-  try {
-    body = await c.req.json();
-  } catch {
-    throw new InvalidSessionError();
-  }
-
-  const sessionHash = body.sessionHash;
-
-  if (!sessionHash) {
-    throw new InvalidSessionError();
-  }
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
-  c.set('sessionHash', sessionHash);
-  await next();
-});

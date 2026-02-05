@@ -1,16 +1,19 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { categoriasService } from '../services/categorias.service';
-import { sessionService } from '../services/session.service';
 import {
   categoriaSchema,
   tipoDocSchema,
   categoriasQuerySchema,
   tipoDocsQuerySchema,
 } from '../schemas/categorias';
-import { InvalidSessionError } from '../errors/http';
+import { requireSessionQuery } from '../middleware/auth';
 import type { AppEnv } from '../types/context';
 
 export const categoriasRouter = new OpenAPIHono<AppEnv>();
+
+// Apply session validation middleware to GET routes
+categoriasRouter.use('/categorias', requireSessionQuery);
+categoriasRouter.use('/tipo-docs', requireSessionQuery);
 
 // ============== Route Definitions ==============
 
@@ -47,25 +50,11 @@ const getTipoDocsRoute = createRoute({
 // ============== Route Handlers ==============
 
 categoriasRouter.openapi(getCategoriasRoute, async (c) => {
-  const { sessionHash } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const categorias = await categoriasService.getCategorias();
   return c.json(categorias);
 });
 
 categoriasRouter.openapi(getTipoDocsRoute, async (c) => {
-  const { sessionHash } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const tipoDocs = await categoriasService.getTipoDocs();
   return c.json(tipoDocs);
 });

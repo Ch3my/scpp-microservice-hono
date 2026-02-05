@@ -1,4 +1,4 @@
-import { db } from './client';
+import { query } from './client';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 /**
@@ -6,7 +6,7 @@ import type { ResultSetHeader, RowDataPacket } from 'mysql2';
  */
 export async function select<T>(sql: string, params: unknown[] = []): Promise<T[]> {
   try {
-    const [rows] = await db.query<RowDataPacket[]>(sql, params);
+    const [rows] = await query<RowDataPacket[]>(sql, params);
     return rows as T[];
   } catch (error) {
     console.error('Database SELECT error:', error);
@@ -19,7 +19,7 @@ export async function select<T>(sql: string, params: unknown[] = []): Promise<T[
  */
 export async function insert(sql: string, params: unknown[]): Promise<number> {
   try {
-    const [result] = await db.query<ResultSetHeader>(sql, params);
+    const [result] = await query<ResultSetHeader>(sql, params);
     return result.affectedRows;
   } catch (error) {
     console.error('Database INSERT error:', error);
@@ -32,7 +32,7 @@ export async function insert(sql: string, params: unknown[]): Promise<number> {
  */
 export async function insertReturningId(sql: string, params: unknown[]): Promise<number> {
   try {
-    const [result] = await db.query<ResultSetHeader>(sql, params);
+    const [result] = await query<ResultSetHeader>(sql, params);
     return result.insertId;
   } catch (error) {
     console.error('Database INSERT error:', error);
@@ -45,7 +45,7 @@ export async function insertReturningId(sql: string, params: unknown[]): Promise
  */
 export async function update(sql: string, params: unknown[]): Promise<number> {
   try {
-    const [result] = await db.query<ResultSetHeader>(sql, params);
+    const [result] = await query<ResultSetHeader>(sql, params);
     return result.affectedRows;
   } catch (error) {
     console.error('Database UPDATE error:', error);
@@ -58,7 +58,7 @@ export async function update(sql: string, params: unknown[]): Promise<number> {
  */
 export async function deleteRow(sql: string, params: unknown[]): Promise<number> {
   try {
-    const [result] = await db.query<ResultSetHeader>(sql, params);
+    const [result] = await query<ResultSetHeader>(sql, params);
     return result.affectedRows;
   } catch (error) {
     console.error('Database DELETE error:', error);
@@ -77,7 +77,7 @@ export async function callProcedure<T = unknown>(
   const sql = `CALL ${procedureName}(${placeholders})`;
 
   try {
-    const [results] = await db.query<RowDataPacket[]>(sql, params);
+    const [results] = await query<RowDataPacket[]>(sql, params);
     return results as T[];
   } catch (error) {
     console.error('Database PROCEDURE error:', error);
@@ -89,6 +89,6 @@ export async function callProcedure<T = unknown>(
  * Execute raw SQL (for complex queries or DDL)
  */
 export async function raw<T = unknown>(sql: string, params: unknown[] = []): Promise<T> {
-  const [result] = await db.query<RowDataPacket[]>(sql, params);
+  const [result] = await query<RowDataPacket[]>(sql, params);
   return result as T;
 }

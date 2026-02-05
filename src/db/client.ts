@@ -3,6 +3,7 @@ import mysql, {
   type PoolConnection,
   type FieldPacket,
   type RowDataPacket,
+  type ResultSetHeader,
 } from 'mysql2/promise';
 import { env } from '../config/env';
 
@@ -92,7 +93,7 @@ const isRetryableError = (error: unknown): boolean => {
 /**
  * Execute a query with automatic retry logic
  */
-export async function query<T extends RowDataPacket[] = RowDataPacket[]>(
+export async function query<T extends RowDataPacket[] | ResultSetHeader = RowDataPacket[]>(
   sql: string,
   params: unknown[] = []
 ): Promise<[T, FieldPacket[]]> {

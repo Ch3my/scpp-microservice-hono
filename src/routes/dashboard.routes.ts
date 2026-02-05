@@ -1,6 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { dashboardService } from '../services/dashboard.service';
-import { sessionService } from '../services/session.service';
 import {
   dashboardQuerySchema,
   monthlyGraphQuerySchema,
@@ -10,10 +9,18 @@ import {
   yearlySumQuerySchema,
   expensesByCategoryTimeseriesQuerySchema,
 } from '../schemas/dashboard';
-import { InvalidSessionError } from '../errors/http';
+import { requireSessionQuery } from '../middleware/auth';
 import type { AppEnv } from '../types/context';
 
 export const dashboardRouter = new OpenAPIHono<AppEnv>();
+
+// Apply session validation middleware to GET routes
+dashboardRouter.use('/dashboard', requireSessionQuery);
+dashboardRouter.use('/monthly-graph', requireSessionQuery);
+dashboardRouter.use('/expenses-by-category', requireSessionQuery);
+dashboardRouter.use('/curr-month-spending', requireSessionQuery);
+dashboardRouter.use('/yearly-sum', requireSessionQuery);
+dashboardRouter.use('/expenses-by-category-timeseries', requireSessionQuery);
 
 // ============== Route Definitions ==============
 
@@ -122,13 +129,6 @@ const getExpensesByCategoryTimeseriesRoute = createRoute({
 // ============== Route Handlers ==============
 
 dashboardRouter.openapi(getDashboardRoute, async (c) => {
-  const { sessionHash } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const data = await dashboardService.getDashboard();
   return c.json(data);
 });
@@ -138,61 +138,30 @@ dashboardRouter.openapi(postDashboardRoute, (c) => {
 });
 
 dashboardRouter.openapi(getMonthlyGraphRoute, async (c) => {
-  const { sessionHash, nMonths } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
+  const { nMonths } = c.req.valid('query');
   const data = await dashboardService.getMonthlyGraph(nMonths);
   return c.json(data);
 });
 
 dashboardRouter.openapi(getExpensesByCategoryRoute, async (c) => {
-  const { sessionHash, nMonths } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
+  const { nMonths } = c.req.valid('query');
   const data = await dashboardService.getExpensesByCategory(nMonths);
   return c.json(data);
 });
 
 dashboardRouter.openapi(getCurrentMonthSpendingRoute, async (c) => {
-  const { sessionHash } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const data = await dashboardService.getCurrentMonthSpending();
   return c.json(data);
 });
 
 dashboardRouter.openapi(getYearlySumRoute, async (c) => {
-  const { sessionHash, nMonths } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
+  const { nMonths } = c.req.valid('query');
   const data = await dashboardService.getYearlySum(nMonths);
   return c.json(data);
 });
 
 dashboardRouter.openapi(getExpensesByCategoryTimeseriesRoute, async (c) => {
-  const { sessionHash, nMonths } = c.req.valid('query');
-
-  const isValid = await sessionService.validate(sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
+  const { nMonths } = c.req.valid('query');
   const data = await dashboardService.getExpensesByCategoryTimeseries(nMonths);
   return c.json(data);
 });
