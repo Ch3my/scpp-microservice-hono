@@ -44,6 +44,7 @@ export const documentosQuerySchema = z.object({
   searchPhrase: z.string().optional(),
   searchPhraseIgnoreOtherFilters: z.string().optional(),
   id: z.array(z.string()).or(z.string()).optional(),
+  'id[]': z.array(z.string()).or(z.string()).optional(),
 });
 
 /**

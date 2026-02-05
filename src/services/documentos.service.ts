@@ -78,8 +78,10 @@ export const documentosService = {
       query += ` AND documentos.proposito LIKE '%${searchPhrase}%'`;
     }
 
-    if (id) {
-      const ids = Array.isArray(id) ? id.join(',') : id;
+    // Handle both 'id' and 'id[]' query parameter formats
+    const idParam = id || params['id[]'];
+    if (idParam) {
+      const ids = Array.isArray(idParam) ? idParam.join(',') : idParam;
       query += ` AND documentos.id IN (${ids})`;
     }
 
