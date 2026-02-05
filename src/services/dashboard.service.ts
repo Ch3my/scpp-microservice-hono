@@ -4,7 +4,6 @@ import {
   getFirstDayOfMonthAgo,
   getLastDayOfCurrentMonth,
   generateMonthLabels,
-  getCurrentYear,
 } from '../utils/date';
 import type { MonthlyGraphResponse } from '../schemas/dashboard';
 
@@ -13,14 +12,59 @@ interface MonthlyTotal {
   total: number;
 }
 
-interface CategoryExpense {
-  categoria: string;
-  total: number;
+interface CategoryExpenseRow {
+  descripcion: string;
+  total: string | number;
+  catId: number;
 }
 
-interface YearlyTotal {
-  year: number;
-  total: number;
+interface CategoryExpenseDataItem {
+  label: string;
+  data: number;
+  catId: number;
+}
+
+interface CategoryExpenseResponse {
+  labels: string[];
+  amounts: number[];
+  data: CategoryExpenseDataItem[];
+  range: {
+    start: string;
+    end: string;
+  };
+}
+
+interface CurrentMonthSpendingRow {
+  fk_tipoDoc: number;
+  tipoDoc_descripcion: string;
+  sumMonto: string | number;
+}
+
+interface TopGastoRow {
+  fecha: string;
+  proposito: string;
+  monto: number;
+}
+
+interface CurrentMonthSpendingResponse {
+  data: CurrentMonthSpendingRow[];
+  porcentajeUsado: number;
+  topGastos: TopGastoRow[];
+}
+
+interface YearlySumRow {
+  id: number;
+  descripcion: string;
+  sumMonto: string | number;
+}
+
+interface YearlySumResponse {
+  data: YearlySumRow[];
+  porcentajeUsado: number;
+  range: {
+    start: string;
+    end: string;
+  };
 }
 
 interface CategoryTimeseriesRow {
@@ -135,62 +179,146 @@ export const dashboardService = {
   /**
    * Get expenses grouped by category
    */
-  async getExpensesByCategory(
-    fechaInicio?: string,
-    fechaTermino?: string
-  ): Promise<CategoryExpense[]> {
-    let query = `
-      SELECT categorias.descripcion as categoria, SUM(documentos.monto) as total
+  async getExpensesByCategory(nMonths?: number): Promise<CategoryExpenseResponse> {
+    const months = nMonths || 13;
+
+    const fechaInicio = DateTime.now()
+      .minus({ months })
+      .startOf('month')
+      .toFormat('yyyy-MM-dd');
+
+    const fechaTermino = DateTime.now().endOf('month').toFormat('yyyy-MM-dd');
+
+    const query = `
+      SELECT categorias.descripcion, SUM(documentos.monto) as total,
+        categorias.id as catId
       FROM documentos
       INNER JOIN categorias ON documentos.fk_categoria = categorias.id
-      WHERE documentos.fk_tipoDoc = 1
+      WHERE documentos.fecha BETWEEN '${fechaInicio}' AND '${fechaTermino}'
+      GROUP BY categorias.descripcion, categorias.id, documentos.fk_categoria
+      ORDER BY total DESC
     `;
 
-    if (fechaInicio) {
-      query += ` AND documentos.fecha >= '${fechaInicio}'`;
-    }
-    if (fechaTermino) {
-      query += ` AND documentos.fecha <= '${fechaTermino}'`;
+    const barData = await select<CategoryExpenseRow>(query);
+
+    const labels: string[] = [];
+    const amounts: number[] = [];
+    const data: CategoryExpenseDataItem[] = [];
+
+    for (const b of barData) {
+      data.push({
+        label: b.descripcion,
+        data: Number(b.total),
+        catId: b.catId,
+      });
+      labels.push(b.descripcion);
+      amounts.push(Number(b.total));
     }
 
-    query += ' GROUP BY categorias.descripcion ORDER BY total DESC';
-
-    return select<CategoryExpense>(query);
+    return {
+      labels,
+      amounts,
+      data,
+      range: {
+        start: fechaInicio,
+        end: fechaTermino,
+      },
+    };
   },
 
   /**
    * Get current month spending
    */
-  async getCurrentMonthSpending(): Promise<unknown> {
+  async getCurrentMonthSpending(): Promise<CurrentMonthSpendingResponse> {
     const now = DateTime.now();
-    const startOfMonth = now.startOf('month').toFormat('yyyy-MM-dd');
-    const endOfMonth = now.endOf('month').toFormat('yyyy-MM-dd');
+    const firstDay = now.startOf('month').toFormat('yyyy-MM-dd');
+    const lastDay = now.endOf('month').toFormat('yyyy-MM-dd');
 
     const query = `
-      SELECT SUM(monto) as total
+      SELECT documentos.fk_tipoDoc, tipodoc.descripcion as tipoDoc_descripcion,
+        SUM(documentos.monto) as sumMonto
       FROM documentos
-      WHERE fk_tipoDoc = 1
-      AND fecha BETWEEN '${startOfMonth}' AND '${endOfMonth}'
+      LEFT JOIN tipodoc ON documentos.fk_tipoDoc = tipodoc.id
+      WHERE documentos.fecha >= '${firstDay}'
+      AND documentos.fecha <= '${lastDay}'
+      GROUP BY documentos.fk_tipoDoc
     `;
 
-    const result = await select<{ total: number }>(query);
-    return { total: result[0]?.total || 0 };
+    const result = await select<CurrentMonthSpendingRow>(query);
+
+    const montoIngreso = result.find((o) => o.fk_tipoDoc === 3);
+    const montoGasto = result.find((o) => o.fk_tipoDoc === 1);
+
+    if (!montoIngreso || !montoGasto) {
+      return {
+        data: [],
+        porcentajeUsado: 0,
+        topGastos: [],
+      };
+    }
+
+    let porcentajeUsado =
+      (Number(montoGasto.sumMonto) * 100) / Number(montoIngreso.sumMonto);
+    porcentajeUsado = Number.parseFloat(porcentajeUsado.toFixed(2));
+
+    // Get TOP gastos
+    const topGastosQuery = `
+      SELECT documentos.fecha, documentos.proposito, documentos.monto
+      FROM documentos
+      WHERE documentos.fk_tipoDoc = 1
+      AND documentos.fecha >= '${firstDay}'
+      AND documentos.fecha <= '${lastDay}'
+      ORDER BY documentos.monto DESC
+      LIMIT 10
+    `;
+    const topGastos = await select<TopGastoRow>(topGastosQuery);
+
+    return {
+      data: result,
+      porcentajeUsado,
+      topGastos,
+    };
   },
 
   /**
    * Get yearly sum by document type
    */
-  async getYearlySum(year?: string): Promise<YearlyTotal[]> {
-    const targetYear = year || getCurrentYear().toString();
+  async getYearlySum(nMonths?: number): Promise<YearlySumResponse> {
+    const months = nMonths || 12;
+
+    const fechaInicio =
+      DateTime.now().minus({ months }).toFormat('yyyy-MM-') + '01';
+    const fechaTermino =
+      DateTime.now().toFormat('yyyy-MM-') + DateTime.now().daysInMonth;
 
     const query = `
-      SELECT YEAR(fecha) as year, SUM(monto) as total
+      SELECT tipodoc.id, tipodoc.descripcion, SUM(monto) as sumMonto
       FROM documentos
-      WHERE YEAR(fecha) = ${targetYear}
-      GROUP BY YEAR(fecha)
+      LEFT JOIN tipodoc ON documentos.fk_tipoDoc = tipodoc.id
+      WHERE documentos.fecha BETWEEN '${fechaInicio}' AND '${fechaTermino}'
+      GROUP BY documentos.fk_tipoDoc
     `;
 
-    return select<YearlyTotal>(query);
+    const result = await select<YearlySumRow>(query);
+
+    const montoGasto = result.find((element) => element.id === 1);
+    const montoIngreso = result.find((element) => element.id === 3);
+
+    let porcentajeUsado = 0;
+    if (montoGasto && montoIngreso && Number(montoIngreso.sumMonto) > 0) {
+      porcentajeUsado =
+        (Number(montoGasto.sumMonto) * 100) / Number(montoIngreso.sumMonto);
+      porcentajeUsado = Number.parseFloat(porcentajeUsado.toFixed(2));
+    }
+
+    return {
+      data: result,
+      porcentajeUsado,
+      range: {
+        start: fechaInicio,
+        end: fechaTermino,
+      },
+    };
   },
 
   /**

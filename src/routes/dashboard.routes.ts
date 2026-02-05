@@ -150,14 +150,14 @@ dashboardRouter.openapi(getMonthlyGraphRoute, async (c) => {
 });
 
 dashboardRouter.openapi(getExpensesByCategoryRoute, async (c) => {
-  const { sessionHash, fechaInicio, fechaTermino } = c.req.valid('query');
+  const { sessionHash, nMonths } = c.req.valid('query');
 
   const isValid = await sessionService.validate(sessionHash);
   if (!isValid) {
     throw new InvalidSessionError();
   }
 
-  const data = await dashboardService.getExpensesByCategory(fechaInicio, fechaTermino);
+  const data = await dashboardService.getExpensesByCategory(nMonths);
   return c.json(data);
 });
 
@@ -174,14 +174,14 @@ dashboardRouter.openapi(getCurrentMonthSpendingRoute, async (c) => {
 });
 
 dashboardRouter.openapi(getYearlySumRoute, async (c) => {
-  const { sessionHash, year } = c.req.valid('query');
+  const { sessionHash, nMonths } = c.req.valid('query');
 
   const isValid = await sessionService.validate(sessionHash);
   if (!isValid) {
     throw new InvalidSessionError();
   }
 
-  const data = await dashboardService.getYearlySum(year);
+  const data = await dashboardService.getYearlySum(nMonths);
   return c.json(data);
 });
 

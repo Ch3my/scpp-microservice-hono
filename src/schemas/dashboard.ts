@@ -36,8 +36,10 @@ export const monthlyGraphResponseSchema = z
  */
 export const expensesByCategoryQuerySchema = z.object({
   sessionHash: z.string().min(1, 'Session hash is required'),
-  fechaInicio: z.string().optional(),
-  fechaTermino: z.string().optional(),
+  nMonths: z
+    .string()
+    .optional()
+    .transform((val) => (val ? Number.parseInt(val, 10) : undefined)),
 });
 
 /**
@@ -52,7 +54,10 @@ export const currentMonthSpendingQuerySchema = z.object({
  */
 export const yearlySumQuerySchema = z.object({
   sessionHash: z.string().min(1, 'Session hash is required'),
-  year: z.string().optional(),
+  nMonths: z
+    .string()
+    .optional()
+    .transform((val) => (val ? Number.parseInt(val, 10) : undefined)),
 });
 
 /**
