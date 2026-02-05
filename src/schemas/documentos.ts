@@ -26,8 +26,8 @@ export const documentoSchema = z
     proposito: z.string(),
     monto: z.number(),
     fecha: z.string(), // 'yyyy-MM-dd' format
-    fk_categoria: z.number(),
-    categoria: categoriaNestedSchema,
+    fk_categoria: z.number().nullable(),
+    categoria: categoriaNestedSchema.nullable(),
     tipoDoc: tipoDocNestedSchema,
   })
   .openapi('Documento');
@@ -52,7 +52,7 @@ export const documentosQuerySchema = z.object({
  */
 export const createDocumentoSchema = z
   .object({
-    fk_categoria: z.number(),
+    fk_categoria: z.number().nullable(),
     fk_tipoDoc: z.number(),
     proposito: z.string(),
     monto: z.number(),
@@ -67,7 +67,7 @@ export const createDocumentoSchema = z
 export const updateDocumentoSchema = z
   .object({
     id: z.number(),
-    fk_categoria: z.number(),
+    fk_categoria: z.number().nullable(),
     fk_tipoDoc: z.number(),
     proposito: z.string(),
     monto: z.number(),
