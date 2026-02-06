@@ -226,8 +226,8 @@ foodRouter.openapi(deleteFoodItemRoute, async (c) => {
 // ============== FOOD TRANSACTIONS Handlers ==============
 
 foodRouter.openapi(getFoodTransactionsRoute, async (c) => {
-  const { foodItemId } = c.req.valid('query');
-  const transactions = await foodService.getFoodTransactions(foodItemId);
+  const { id } = c.req.valid('query');
+  const transactions = await foodService.getFoodTransactions(id);
   return c.json(transactions);
 });
 

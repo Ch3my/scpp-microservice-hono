@@ -53,7 +53,7 @@ export const foodItemsQuerySchema = z.object({
 export const foodItemQuantityQuerySchema = z.object({});
 
 export const foodTransactionsQuerySchema = z.object({
-  foodItemId: z.string().optional(),
+  id: z.string().optional(),
 });
 
 // Create/Update/Delete schemas
