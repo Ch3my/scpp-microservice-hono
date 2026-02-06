@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { documentosService } from '../services/documentos.service';
 import { sessionService } from '../services/session.service';
-import { requireSessionQuery } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import {
   documentoSchema,
   documentosQuerySchema,
@@ -16,7 +16,7 @@ import type { AppEnv } from '../types/context';
 export const documentosRouter = new OpenAPIHono<AppEnv>();
 
 // Apply session validation middleware to GET routes
-documentosRouter.use('/documentos', requireSessionQuery);
+documentosRouter.use('/documentos', requireSession);
 
 // ============== Route Definitions ==============
 

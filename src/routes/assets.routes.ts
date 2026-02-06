@@ -9,13 +9,13 @@ import {
 } from '../schemas/assets';
 import { successResponseSchema } from '../schemas/common';
 import { InvalidSessionError } from '../errors/http';
-import { requireSessionQuery } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import type { AppEnv } from '../types/context';
 
 export const assetsRouter = new OpenAPIHono<AppEnv>();
 
 // Apply session validation middleware to GET routes
-assetsRouter.use('/assets', requireSessionQuery);
+assetsRouter.use('/assets', requireSession);
 
 // ============== Route Definitions ==============
 

@@ -9,18 +9,18 @@ import {
   yearlySumQuerySchema,
   expensesByCategoryTimeseriesQuerySchema,
 } from '../schemas/dashboard';
-import { requireSessionQuery } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import type { AppEnv } from '../types/context';
 
 export const dashboardRouter = new OpenAPIHono<AppEnv>();
 
 // Apply session validation middleware to GET routes
-dashboardRouter.use('/dashboard', requireSessionQuery);
-dashboardRouter.use('/monthly-graph', requireSessionQuery);
-dashboardRouter.use('/expenses-by-category', requireSessionQuery);
-dashboardRouter.use('/curr-month-spending', requireSessionQuery);
-dashboardRouter.use('/yearly-sum', requireSessionQuery);
-dashboardRouter.use('/expenses-by-category-timeseries', requireSessionQuery);
+dashboardRouter.use('/dashboard', requireSession);
+dashboardRouter.use('/monthly-graph', requireSession);
+dashboardRouter.use('/expenses-by-category', requireSession);
+dashboardRouter.use('/curr-month-spending', requireSession);
+dashboardRouter.use('/yearly-sum', requireSession);
+dashboardRouter.use('/expenses-by-category-timeseries', requireSession);
 
 // ============== Route Definitions ==============
 

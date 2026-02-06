@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { sessionService } from '../services/session.service';
-import { loginBodySchema, logoutBodySchema, checkSessionQuerySchema } from '../schemas/auth';
+import { loginBodySchema, logoutBodySchema, checkSessionHeaderSchema } from '../schemas/auth';
 import { loginSuccessResponseSchema, successResponseSchema } from '../schemas/common';
 import { LoginFailedError, InvalidSessionError } from '../errors/http';
 import type { AppEnv } from '../types/context';
@@ -52,7 +52,7 @@ const checkSessionRoute = createRoute({
   path: '/check-session',
   tags: ['Auth'],
   request: {
-    query: checkSessionQuerySchema,
+    headers: checkSessionHeaderSchema,
   },
   responses: {
     200: {
@@ -94,7 +94,14 @@ authRouter.openapi(logoutRoute, async (c) => {
 });
 
 authRouter.openapi(checkSessionRoute, async (c) => {
-  const { sessionHash } = c.req.valid('query');
+  const { authorization } = c.req.valid('header');
+  const sessionHash = authorization.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : null;
+
+  if (!sessionHash) {
+    throw new InvalidSessionError();
+  }
 
   const isValid = await sessionService.validate(sessionHash);
 

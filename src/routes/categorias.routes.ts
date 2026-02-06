@@ -6,14 +6,14 @@ import {
   categoriasQuerySchema,
   tipoDocsQuerySchema,
 } from '../schemas/categorias';
-import { requireSessionQuery } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import type { AppEnv } from '../types/context';
 
 export const categoriasRouter = new OpenAPIHono<AppEnv>();
 
 // Apply session validation middleware to GET routes
-categoriasRouter.use('/categorias', requireSessionQuery);
-categoriasRouter.use('/tipo-docs', requireSessionQuery);
+categoriasRouter.use('/categorias', requireSession);
+categoriasRouter.use('/tipo-docs', requireSession);
 
 // ============== Route Definitions ==============
 

@@ -4,11 +4,14 @@ import { sessionService } from '../services/session.service';
 import type { AppEnv } from '../types/context';
 
 /**
- * Middleware to validate session hash from query parameters
- * Use for GET requests where sessionHash comes from query string
+ * Middleware to validate session hash from Authorization header
+ * Expects: Authorization: Bearer <sessionHash>
  */
-export const requireSessionQuery = createMiddleware<AppEnv>(async (c, next) => {
-  const sessionHash = c.req.query('sessionHash');
+export const requireSession = createMiddleware<AppEnv>(async (c, next) => {
+  const authHeader = c.req.header('Authorization');
+  const sessionHash = authHeader?.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : null;
 
   if (!sessionHash) {
     throw new InvalidSessionError();

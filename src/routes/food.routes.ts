@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { foodService } from '../services/food.service';
 import { sessionService } from '../services/session.service';
-import { requireSessionQuery } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import {
   foodItemSchema,
   foodItemQuantitySchema,
@@ -23,9 +23,9 @@ import type { AppEnv } from '../types/context';
 export const foodRouter = new OpenAPIHono<AppEnv>();
 
 // Apply session validation middleware to GET routes
-foodRouter.use('/items', requireSessionQuery);
-foodRouter.use('/item-quantity', requireSessionQuery);
-foodRouter.use('/transaction', requireSessionQuery);
+foodRouter.use('/items', requireSession);
+foodRouter.use('/item-quantity', requireSession);
+foodRouter.use('/transaction', requireSession);
 
 // ============== FOOD ITEMS Route Definitions ==============
 
