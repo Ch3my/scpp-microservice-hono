@@ -25,7 +25,6 @@ export const assetSchema = z
  * GET /assets query parameters
  */
 export const assetsQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
   id: z.array(z.string()).or(z.string()).optional(),
   'id[]': z.array(z.string()).or(z.string()).optional(),
 });
@@ -39,7 +38,6 @@ export const createAssetSchema = z
     descripcion: z.string(),
     assetData: z.string(), // Base64 encoded
     fecha: z.string(), // ISO datetime
-    sessionHash: z.string().min(1),
   })
   .openapi('CreateAsset');
 
@@ -49,7 +47,6 @@ export const createAssetSchema = z
 export const deleteAssetSchema = z
   .object({
     id: z.number(),
-    sessionHash: z.string().min(1),
   })
   .openapi('DeleteAsset');
 

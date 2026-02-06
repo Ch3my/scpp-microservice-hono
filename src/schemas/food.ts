@@ -46,17 +46,13 @@ export const foodTransactionSchema = z
 
 // Query schemas
 export const foodItemsQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
   id: z.array(z.string()).or(z.string()).optional(),
   'id[]': z.array(z.string()).or(z.string()).optional(),
 });
 
-export const foodItemQuantityQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
-});
+export const foodItemQuantityQuerySchema = z.object({});
 
 export const foodTransactionsQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
   foodItemId: z.string().optional(),
 });
 
@@ -65,7 +61,6 @@ export const createFoodItemSchema = z
   .object({
     name: z.string().min(1, 'Name is required'),
     unit: z.string().min(1, 'Unit is required'),
-    sessionHash: z.string().min(1),
   })
   .openapi('CreateFoodItem');
 
@@ -74,14 +69,12 @@ export const updateFoodItemSchema = z
     id: z.number(),
     name: z.string().min(1),
     unit: z.string().min(1),
-    sessionHash: z.string().min(1),
   })
   .openapi('UpdateFoodItem');
 
 export const deleteFoodItemSchema = z
   .object({
     id: z.number(),
-    sessionHash: z.string().min(1),
   })
   .openapi('DeleteFoodItem');
 
@@ -93,7 +86,6 @@ export const createFoodTransactionSchema = z
     note: z.string().optional(),
     code: z.string().optional(),
     bestBefore: z.string().nullable().optional(),
-    sessionHash: z.string().min(1),
   })
   .openapi('CreateFoodTransaction');
 
@@ -104,14 +96,12 @@ export const updateFoodTransactionSchema = z
     note: z.string().optional(),
     code: z.string().optional(),
     bestBefore: z.string().nullable().optional(),
-    sessionHash: z.string().min(1),
   })
   .openapi('UpdateFoodTransaction');
 
 export const deleteFoodTransactionSchema = z
   .object({
     id: z.number(),
-    sessionHash: z.string().min(1),
   })
   .openapi('DeleteFoodTransaction');
 

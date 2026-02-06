@@ -83,9 +83,13 @@ authRouter.openapi(loginRoute, async (c) => {
 });
 
 authRouter.openapi(logoutRoute, async (c) => {
-  const { sessionHash } = c.req.valid('json');
+  // Get sessionHash from Authorization header
+  const authorization = c.req.header('Authorization');
+  const sessionHash = authorization?.startsWith('Bearer ') ? authorization.slice(7) : null;
 
-  await sessionService.delete(sessionHash);
+  if (sessionHash) {
+    await sessionService.delete(sessionHash);
+  }
 
   return c.json({
     success: true as const,

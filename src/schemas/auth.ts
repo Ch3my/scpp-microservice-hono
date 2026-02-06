@@ -11,13 +11,9 @@ export const loginBodySchema = z
   .openapi('LoginRequest');
 
 /**
- * Logout request body
+ * Logout request body (empty - sessionHash now passed via Authorization header)
  */
-export const logoutBodySchema = z
-  .object({
-    sessionHash: z.string().min(1, 'Session hash is required'),
-  })
-  .openapi('LogoutRequest');
+export const logoutBodySchema = z.object({}).openapi('LogoutRequest');
 
 /**
  * Check session header schema
@@ -29,5 +25,4 @@ export const checkSessionHeaderSchema = z.object({
 
 // Type exports
 export type LoginBody = z.infer<typeof loginBodySchema>;
-export type LogoutBody = z.infer<typeof logoutBodySchema>;
 export type CheckSessionHeader = z.infer<typeof checkSessionHeaderSchema>;

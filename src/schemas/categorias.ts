@@ -24,16 +24,12 @@ export const tipoDocSchema = z
 /**
  * GET /categorias query parameters
  */
-export const categoriasQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
-});
+export const categoriasQuerySchema = z.object({});
 
 /**
  * GET /tipo-docs query parameters
  */
-export const tipoDocsQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
-});
+export const tipoDocsQuerySchema = z.object({});
 
 // Type exports
 export type Categoria = z.infer<typeof categoriaSchema>;

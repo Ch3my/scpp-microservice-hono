@@ -36,7 +36,6 @@ export const documentoSchema = z
  * GET /documentos query parameters
  */
 export const documentosQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
   fk_tipoDoc: z.string().optional(),
   fechaInicio: z.string().optional(),
   fechaTermino: z.string().optional(),
@@ -57,7 +56,6 @@ export const createDocumentoSchema = z
     proposito: z.string(),
     monto: z.number(),
     fecha: z.string(),
-    sessionHash: z.string().min(1),
   })
   .openapi('CreateDocumento');
 
@@ -72,7 +70,6 @@ export const updateDocumentoSchema = z
     proposito: z.string(),
     monto: z.number(),
     fecha: z.string(),
-    sessionHash: z.string().min(1),
   })
   .openapi('UpdateDocumento');
 
@@ -82,7 +79,6 @@ export const updateDocumentoSchema = z
 export const deleteDocumentoSchema = z
   .object({
     id: z.number(),
-    sessionHash: z.string().min(1),
   })
   .openapi('DeleteDocumento');
 

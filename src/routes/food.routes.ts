@@ -1,6 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { foodService } from '../services/food.service';
-import { sessionService } from '../services/session.service';
 import { requireSession } from '../middleware/auth';
 import {
   foodItemSchema,
@@ -17,13 +16,14 @@ import {
   deleteFoodTransactionSchema,
 } from '../schemas/food';
 import { successResponseSchema } from '../schemas/common';
-import { InvalidSessionError, MissingDataError } from '../errors/http';
+import { MissingDataError } from '../errors/http';
 import type { AppEnv } from '../types/context';
 
 export const foodRouter = new OpenAPIHono<AppEnv>();
 
-// Apply session validation middleware to GET routes
+// Apply session validation middleware to all routes
 foodRouter.use('/items', requireSession);
+foodRouter.use('/item', requireSession);
 foodRouter.use('/item-quantity', requireSession);
 foodRouter.use('/transaction', requireSession);
 
@@ -207,38 +207,18 @@ foodRouter.openapi(getFoodItemQuantityRoute, async (c) => {
 
 foodRouter.openapi(createFoodItemRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
-  const { sessionHash, ...itemData } = data;
-  const result = await foodService.createFoodItem(itemData);
+  const result = await foodService.createFoodItem(data);
   return c.json(result);
 });
 
 foodRouter.openapi(updateFoodItemRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
-  const { sessionHash, ...itemData } = data;
-  const result = await foodService.updateFoodItem(itemData);
+  const result = await foodService.updateFoodItem(data);
   return c.json(result);
 });
 
 foodRouter.openapi(deleteFoodItemRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const result = await foodService.deleteFoodItem(data.id);
   return c.json(result);
 });
@@ -254,41 +234,22 @@ foodRouter.openapi(getFoodTransactionsRoute, async (c) => {
 foodRouter.openapi(createFoodTransactionRoute, async (c) => {
   const data = c.req.valid('json');
 
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   if (!data.foodItemId || !data.quantity || !data.transactionType) {
     throw new MissingDataError();
   }
 
-  const { sessionHash, ...transactionData } = data;
-  const result = await foodService.createFoodTransaction(transactionData);
+  const result = await foodService.createFoodTransaction(data);
   return c.json(result);
 });
 
 foodRouter.openapi(updateFoodTransactionRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
-  const { sessionHash, ...transactionData } = data;
-  const result = await foodService.updateFoodTransaction(transactionData);
+  const result = await foodService.updateFoodTransaction(data);
   return c.json(result);
 });
 
 foodRouter.openapi(deleteFoodTransactionRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const result = await foodService.deleteFoodTransaction(data.id);
   return c.json(result);
 });

@@ -1,6 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { assetsService } from '../services/assets.service';
-import { sessionService } from '../services/session.service';
 import {
   assetSchema,
   assetsQuerySchema,
@@ -8,13 +7,12 @@ import {
   deleteAssetSchema,
 } from '../schemas/assets';
 import { successResponseSchema } from '../schemas/common';
-import { InvalidSessionError } from '../errors/http';
 import { requireSession } from '../middleware/auth';
 import type { AppEnv } from '../types/context';
 
 export const assetsRouter = new OpenAPIHono<AppEnv>();
 
-// Apply session validation middleware to GET routes
+// Apply session validation middleware to all routes
 assetsRouter.use('/assets', requireSession);
 
 // ============== Route Definitions ==============
@@ -82,25 +80,12 @@ assetsRouter.openapi(getAssetsRoute, async (c) => {
 
 assetsRouter.openapi(createAssetRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
-  const { sessionHash, ...assetData } = data;
-  const result = await assetsService.createAsset(assetData);
+  const result = await assetsService.createAsset(data);
   return c.json(result);
 });
 
 assetsRouter.openapi(deleteAssetRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const result = await assetsService.deleteAsset(data.id);
   return c.json(result);
 });

@@ -1,6 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { documentosService } from '../services/documentos.service';
-import { sessionService } from '../services/session.service';
 import { requireSession } from '../middleware/auth';
 import {
   documentoSchema,
@@ -10,12 +9,11 @@ import {
   deleteDocumentoSchema,
 } from '../schemas/documentos';
 import { successResponseSchema } from '../schemas/common';
-import { InvalidSessionError } from '../errors/http';
 import type { AppEnv } from '../types/context';
 
 export const documentosRouter = new OpenAPIHono<AppEnv>();
 
-// Apply session validation middleware to GET routes
+// Apply session validation middleware to all routes
 documentosRouter.use('/documentos', requireSession);
 
 // ============== Route Definitions ==============
@@ -102,38 +100,18 @@ documentosRouter.openapi(getDocumentosRoute, async (c) => {
 
 documentosRouter.openapi(createDocumentoRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
-  const { sessionHash, ...documentData } = data;
-  const result = await documentosService.createDocumento(documentData);
+  const result = await documentosService.createDocumento(data);
   return c.json(result);
 });
 
 documentosRouter.openapi(updateDocumentoRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
-  const { sessionHash, ...documentData } = data;
-  const result = await documentosService.updateDocumento(documentData);
+  const result = await documentosService.updateDocumento(data);
   return c.json(result);
 });
 
 documentosRouter.openapi(deleteDocumentoRoute, async (c) => {
   const data = c.req.valid('json');
-
-  const isValid = await sessionService.validate(data.sessionHash);
-  if (!isValid) {
-    throw new InvalidSessionError();
-  }
-
   const result = await documentosService.deleteDocumento(data.id);
   return c.json(result);
 });

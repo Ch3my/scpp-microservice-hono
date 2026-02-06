@@ -31,20 +31,6 @@ export const errorResponseSchema = z
   })
   .openapi('ErrorResponse');
 
-/**
- * Session hash validation (query parameter)
- */
-export const sessionQuerySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
-});
-
-/**
- * Session hash validation (body parameter)
- */
-export const sessionBodySchema = z.object({
-  sessionHash: z.string().min(1, 'Session hash is required'),
-});
-
 // Type exports for use in handlers
 export type SuccessResponse = z.infer<typeof successResponseSchema>;
 export type LoginSuccessResponse = z.infer<typeof loginSuccessResponseSchema>;
